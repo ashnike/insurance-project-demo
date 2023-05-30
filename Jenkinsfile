@@ -1,7 +1,7 @@
 node{
         stage('git checkout'){
             echo "checking out the code from github"
-            git 'https://github.com/shubhamkushwah123/insurance-project-demo.git'
+            git 'https://github.com/ashnike/insurance-project-demo.git'
         }
         
         stage('maven build'){
@@ -9,16 +9,16 @@ node{
         }
         
         stage('build docker image'){
-            sh 'docker build -t shubhamkushwah123/insure-me:1.0 .'
+            sh 'docker build -t ashnike/insurance:1.0 .'
         }
         
         stage('push docker image to docker hub registry')
         {
             echo 'pushing images to registry'
             
-            withCredentials([string(credentialsId: 'docker-hub-password', variable: 'dockerHubPassword')]) {
-                sh "docker login -u shubhamkushwah123 -p ${dockerHubPassword}"
-                sh 'docker push shubhamkushwah123/insure-me:1.0'
+            withCredentials([string(credentialsId: 'dockerpass', variable: 'dockerHubPassword')]) {
+                sh "docker login -u ashnike -p ${dockerHubPassword}"
+                sh 'docker push ashnike/insurance:1.0'
             }
         }
         
