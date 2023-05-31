@@ -1,4 +1,3 @@
----
 - hosts: test-server
   become: true
   tasks:
@@ -10,6 +9,12 @@
 
   - name: start docker service
     command: sudo systemctl start docker
+
+  - name: stop container
+    command: sudo docker stop insurance
+
+  - name: remove container
+    command: sudo docker rm insurance
 
   - name: deploy insurance application
     command: sudo docker run -itd -p 8081:8081 --name insurance ashnike/insurance:1.0
