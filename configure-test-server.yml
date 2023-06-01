@@ -1,20 +1,32 @@
 - hosts: test-server
   become: true
   tasks:
-  - name: update apt
-    command: sudo apt-get update
+    - name: Update apt
+      apt:
+        update_cache: yes
 
-  - name: install docker
-    command: sudo apt install -y docker.io
+    - name: Install Docker
+      apt:
+        name: docker.io
+        state: present
+        update_cache: yes
 
-  - name: start docker service
-    command: sudo systemctl start docker
+    - name: Start Docker service
+      systemd:
+        name: docker
+        state: started
+        enabled: yes
 
-  - name: stop container
-    command: sudo docker stop insurance
+    - name: Stop container
+      command: docker stop insurance
+      ignore_errors: true
 
-  - name: remove container
-    command: sudo docker rm insurance
+    - name: Remove container
+      command: docker rm insurance
+      ignore_errors: true
 
-  - name: deploy insurance application
-    command: sudo docker run -itd -p 8081:8081 --name insurance ashnike/insurance:1.0
+    - name: Deploy insurance application
+      command: docker run -itd -p 8081:8081 --name insurance ashnike/insurance:1.0
+
+    - name: Start docker application
+      command: docker start insurance
