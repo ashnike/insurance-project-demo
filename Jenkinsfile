@@ -21,19 +21,19 @@ pipeline {
                 git 'https://github.com/ashnike/insurance-project-demo.git'
             }
         }
-        
+
         stage('maven build') {
             steps {
                 sh 'mvn clean package'
             }
         }
-        
+
         stage('build docker image') {
             steps {
                 sh 'docker build -t ashnike/insurance:1.0 .'
             }
         }
-        
+
         stage('push docker image to docker hub registry') {
             steps {
                 echo 'Pushing image to the registry'
@@ -43,11 +43,18 @@ pipeline {
                 }
             }
         }
-        
+
         stage('configure test-server and deploy insure-me') {
             steps {
                 echo 'Configuring test-server'
                 ansiblePlaybook become: true, credentialsId: 'sshnew', disableHostKeyChecking: true, installation: 'Ansible', inventory: '/etc/ansible/hosts', playbook: 'configure-test-server.yml'
+            }
+        }
+
+        stage('Deploy to Production server') {
+            steps {
+                echo 'Configuring production server'
+                ansiblePlaybook become: true, credentialsId: 'sshnew', disableHostKeyChecking: true, installation: 'Ansible', inventory: '/etc/ansible/hosts', playbook: 'configure-prod-server.yml'
             }
         }
     }
