@@ -1,31 +1,54 @@
-node{
-        stage('git checkout'){
-            echo "checking out the code from github"
-            git 'https://github.com/ashnike/insurance-project-demo.git'
+pipeline {
+    agent any
+
+    stages {
+        stage('Clean workspace') {
+            steps {
+                deleteDir()
+            }
         }
-        
-        stage('maven build'){
-            sh 'mvn clean package'
+        stage('Clean Docker images') {
+            steps {
+                sh 'docker rmi ashnike/insurance:1.0 || true' // Remove the specific image tag
+                sh 'docker rmi ashnike/insurance:latest || true' // Remove the specific image tag
+                sh 'docker image prune -f' // Remove dangling images
+            }
         }
-        
-        stage('build docker image'){
-            sh 'docker build -t ashnike/insurance:1.0 .'
-        }
-        
-        stage('push docker image to docker hub registry')
-        {
-            echo 'pushing images to registry'
-            
-            withCredentials([string(credentialsId: 'dockerpass', variable: 'dockerHubPassword')]) {
-                sh "docker login -u ashnike -p ${dockerHubPassword}"
-                sh 'docker push ashnike/insurance:1.0'
+
+        stage('git checkout') {
+            steps {
+                echo 'Checking out the code from GitHub'
+                git 'https://github.com/ashnike/insurance-project-demo.git'
             }
         }
         
-        stage('configure test-server and deploy insure-me'){
-            echo "configuring test-server"
-          //  sh 'ansible-playbook configure-test-server.yml'
-            ansiblePlaybook become: true, credentialsId: 'ssh-key-ansibles', disableHostKeyChecking: true, installation: 'ansible', inventory: '/etc/ansible/hosts', playbook: 'configure-test-server.yml'
+        stage('maven build') {
+            steps {
+                sh 'mvn clean package'
+            }
         }
         
+        stage('build docker image') {
+            steps {
+                sh 'docker build -t ashnike/insurance:1.0 .'
+            }
+        }
+        
+        stage('push docker image to docker hub registry') {
+            steps {
+                echo 'Pushing image to the registry'
+                withCredentials([string(credentialsId: 'dockerpass', variable: 'dockerHubPassword')]) {
+                    sh "docker login -u ashnike -p ${dockerHubPassword}"
+                    sh 'docker push ashnike/insurance:1.0'
+                }
+            }
+        }
+        
+        stage('configure test-server and deploy insure-me') {
+            steps {
+                echo 'Configuring test-server'
+                ansiblePlaybook become: true, credentialsId: 'sshnew', disableHostKeyChecking: true, installation: 'Ansible', inventory: '/etc/ansible/hosts', playbook: 'configure-test-server.yml'
+            }
+        }
+    }
 }
